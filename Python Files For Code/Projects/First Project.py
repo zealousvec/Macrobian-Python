@@ -1,85 +1,228 @@
 import pygame
 import random
+import math
 
 pygame.init()
 
-width = 1280
-height = 720
-screen = pygame.display.set_mode((width, height))
+Width_Num = 1280
+Height_Num = 720
+
+Ball_Radius = 40
+Balls_Num = 20
+
+White = (255, 255, 255)
+Black = (0, 0, 0)
+
+Screen = pygame.display.set_mode((Width_Num, Height_Num))
 pygame.display.set_caption("Physics Simulation")
-clock = pygame.time.Clock()
-running = True
+Clock = pygame.time.Clock()
+Running = True
 
-gonzi_img = pygame.image.load('Images/Pi Placeholder layout.png').convert()
+Texture_Image = pygame.image.load('Images/golf ball.jpg').convert()
+PlayButton_Image = pygame.image.load('Images/Play Button Text.jpg').convert()
+Texture = pygame.transform.scale(Texture_Image, (Ball_Radius * 2, Ball_Radius * 2))
 
-balls_num = 20
-ball_radius = 40
+Balls = []
+Velocities = []
 
-black = (0, 0, 0)
-white = (255,255,255)
-random_colour = (125,74,36)
+Start_Simulation = False
+Show_Credits = False
 
-texture = pygame.image.load('Images/golf ball.jpg').convert()
-texture = pygame.transform.scale(texture, (ball_radius * 2, ball_radius * 2))
+def Text(Text_Colour, Text, TypeOfFont, Width_Num, Height_Num, Size, Align='bottomright'):
+    Font = pygame.font.SysFont(TypeOfFont, Size)
+    Text_Surface = Font.render(Text, True, Text_Colour)
+    Text_Rect = Text_Surface.get_rect()
 
-balls = []
-velocities = []
+    if Align == 'center':
+        Text_Rect.center = (Width_Num, Height_Num)
+    elif Align == 'topleft':
+        Text_Rect.topleft = (Width_Num, Height_Num)
+    elif Align == 'topright':
+        Text_Rect.topright = (Width_Num, Height_Num)
+    elif Align == 'bottomleft':
+        Text_Rect.bottomleft = (Width_Num, Height_Num)
+    else:
+        Text_Rect.bottomright = (Width_Num, Height_Num)
 
-def text(text_colour,text,typeof_font):
+    Screen.blit(Text_Surface, Text_Rect)
 
-    typeof_font = pygame.font.SysFont(typeof_font,30)
-    text_colour = text_colour
+def Create_Ball(i):
+    
+    Ball = Balls[i]
+    Ball.x += Velocities[i][0]
+    Ball.y += Velocities[i][1]
 
-    text_surface = typeof_font.render(text,True,text_colour)
-    text_rect = text_surface.get_rect()
+    Ball_Surface = pygame.Surface((Ball_Radius * 2, Ball_Radius * 2), pygame.SRCALPHA)
+    pygame.draw.circle(Ball_Surface, (255, 255, 255, 255), (Ball_Radius, Ball_Radius), Ball_Radius)
+    Ball_Surface.blit(Texture, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
+    Screen.blit(Ball_Surface, (Ball.x, Ball.y))
 
-    text_rect.bottomright = (width - int(10.222222222222222222222222222), height- float(10))
-    screen.blit(text_surface,text_rect)
+    if Ball.left <= 0 or Ball.right >= Width_Num:
+        Velocities[i][0] = -Velocities[i][0]
 
-def createBall():
+    if Ball.top <= 0 or Ball.bottom >= Height_Num:
+        Velocities[i][1] = -Velocities[i][1]
 
-    ball = balls[i]
-    ball.x += velocities[i][0] 
-    ball.y += velocities[i][1]
+def Add_Balls(num):
+    global Balls_Num
 
-    ball_surface = pygame.Surface((ball_radius * 2, ball_radius * 2), pygame.SRCALPHA)
+    for _ in range(num):
+        x = random.randint(Ball_Radius, Width_Num - Ball_Radius)
+        y = random.randint(Ball_Radius, Height_Num - Ball_Radius)
+        Balls.append(pygame.Rect(x, y, Ball_Radius * 2, Ball_Radius * 2))
+        Velocities.append([random.choice([-5, 5]), random.choice([-5, 5])])
 
-    pygame.draw.circle(ball_surface, (255, 255, 255, 255), (ball_radius, ball_radius), ball_radius)
+    Balls_Num = len(Balls)
 
-    ball_surface.blit(texture, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
-    screen.blit(ball_surface, (ball.x, ball.y))
+def Remove_Balls(num):
+    global Balls_Num
 
-    if ball.left <= 0 or ball.right >= width:
-        velocities[i][0] = -velocities[i][0]
+    if len(Balls) >= num:
+        for _ in range(num):
+            Balls.pop()
+            Velocities.pop()
 
-    if ball.top <= 0 or ball.bottom >= height:
-        velocities[i][1] = -velocities[i][1]
+        Balls_Num = len(Balls)
 
+def Initialize_Balls():
+    global Start_Simulation
+    Start_Simulation = True
 
+def Start_Sim(self):
+    global Start_Simulation, Show_Credits
+    Start_Simulation = True
+    Show_Credits = False
+    Add_Balls(10)
+    self.Clicked = not self.Clicked
 
-for _ in range(balls_num):
+def Show_Credits_Screen(self):
+    global Start_Simulation, Show_Credits
+    Start_Simulation = False
+    Show_Credits = True
+    self.Clicked = not self.Clicked
 
-    x = random.randint(ball_radius, width - ball_radius)
-    y = random.randint(ball_radius, height - ball_radius)
-    balls.append(pygame.Rect(x, y, ball_radius * 2, ball_radius * 2))
-    velocities.append([random.choice([-5, 5]), random.choice([-5, 5])])
+class Button:
 
+    def __init__(self, x, y, Text_Str, Font_Name, Font_Size, Text_Colour, Align='center', On_Click=None):
 
-while running:
+        self.X = x
+        self.Y = y
+        self.Text_Str = Text_Str
+        self.Font_Name = Font_Name
+        self.Font_Size = Font_Size
+        self.Text_Colour = Text_Colour
+        self.Align = Align
+        self.Clicked = False
+        self.On_Click = On_Click
 
-    for event in pygame.event.get():
+        Font_Obj = pygame.font.SysFont(Font_Name, Font_Size)
+        Text_Surface = Font_Obj.render(Text_Str, True, Text_Colour)
+        Text_Rect = Text_Surface.get_rect()
+
+        if Align == 'center':
+            Text_Rect.center = (x, y)
+        elif Align == 'topleft':
+            Text_Rect.topleft = (x, y)
+        elif Align == 'topright':
+            Text_Rect.topright = (x, y)
+        elif Align == 'bottomleft':
+            Text_Rect.bottomleft = (x, y)
+        else:
+            Text_Rect.bottomright = (x, y)
+
+        self.Text_Rect = Text_Rect
+
+    def Draw(self):
+        Pos = pygame.mouse.get_pos()
+
+        if self.Text_Rect.collidepoint(Pos):
+            if pygame.mouse.get_pressed()[0] == 1 and not self.Clicked: # its a tuple btw (go on docs if u dont get it)
+                self.Clicked = True
+
+                if self.On_Click:
+                    self.On_Click(self)
+
+        if not self.Clicked:
+            Text(self.Text_Colour, self.Text_Str, self.Font_Name, self.X, self.Y, self.Font_Size, Align=self.Align)
+
+Button_Spacing = 80
+Button_Center_X = Width_Num // 2
+Button_Center_Y = Height_Num // 2
+
+Play_Button = Button(
+
+    Button_Center_X,
+    Button_Center_Y - 20,
+    "Play",
+    "Segoe UI",
+    60,
+    White,
+    Align='center',
+    On_Click=Start_Sim
+
+)
+
+Credit_Button = Button(
+
+    Button_Center_X,
+    Button_Center_Y + 40,
+    "Credits",
+    "Segoe UI",
+    40,
+    White,
+    Align='center',
+    On_Click=Show_Credits_Screen
+
+)
+
+while Running:
+
+    events = pygame.event.get()
+
+    for event in events:
 
         if event.type == pygame.QUIT:
+
+            Running = False
             pygame.quit()
             exit()
 
-    screen.fill(black)
+        if event.type == pygame.KEYDOWN:
 
-    for i in range(balls_num):
+            if event.key == pygame.K_ESCAPE:
 
-        createBall()
+                Start_Simulation = False
+                Show_Credits = False
 
-        text(random_colour,"V 1.01","Segoe UI")
+            if event.key == pygame.K_e:
+                Add_Balls(10)
+
+            elif event.key == pygame.K_q:
+                Remove_Balls(10)
+
+    Screen.fill(Black)
+
+    if not Start_Simulation and not Show_Credits:
+
+        Play_Button.Draw()
+        Credit_Button.Draw()
+
+        Text(White, "Physics Simulation", "SegoeUI", Width_Num // 2, Height_Num // 2 - 100, 100, Align='center')
+
+    if Show_Credits:
+
+        Text(White, "Created by Dahir Hassan", "Segoe UI", Width_Num // 2, Height_Num // 2, 40, Align='center')
+        Text(White, "Press ESC to return", "Segoe UI", Width_Num // 2, Height_Num // 2 + 50, 30, Align='center')
+        Text(White, "V 1.01", "Segoe UI", Width_Num - 10, Height_Num - 5, 30, Align='bottomright')
+
+    if Start_Simulation:
+
+        for i in range(len(Balls)):
+            Create_Ball(i)
+
+        Text(White, "V 1.01", "Segoe UI", Width_Num - 10, Height_Num - 5, 30, Align='bottomright')
+        Text(White, "Created by Dahir Hassan", "Segoe UI", Width_Num - 10, Height_Num - 40, 20, Align='bottomright')
 
     pygame.display.flip()
-    clock.tick(60)
+    Clock.tick(60)
+
