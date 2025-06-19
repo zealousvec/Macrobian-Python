@@ -1,1 +1,154 @@
+#:kivy 0.8.0
+
+#: import NoTransition kivy.uix.screenmanager.NoTransition
+
+<RoundedButton@Button>:
+
+    background_color: 0, 0, 0, 0
+    background_normal: ''
+
+    canvas.before:
+        Color:
+            rgba: (.4, .4, .4, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [10]
+
+<RoundedImage@Button>:
+
+    source: ""
+
+    background_color: 0, 0, 0, 0  
+    background_normal: ''         
+
+    canvas.before:
+        Color:
+            rgba: (1, 1, 1, 1)  
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [10]
+            source: self.source
+
+
+<MainScreen>:
+
+    name: "first" # my home screen ok
+
+    BoxLayout:
+
+        orientation: 'vertical'
+        padding: 30
+        spacing: 20
+
+        BoxLayout:
+
+            orientation: 'vertical'
+            size_hint: 0.9, 0.7
+            pos_hint: {"center_x": 0.5}
+
+            padding: 20
+            spacing: 10
+
+            #canvas.before:
+                #Color:
+                    #rgba: 0.2, 0.2, 0.2, 0.3  
+                #RoundedRectangle:
+                    #pos: self.pos
+                    #size: self.size
+                    #radius: [10]
+
+
+            FloatLayout:
+
+                size_hint_y: 0.45
+
+                TextInput:
+
+                    id: first_input
+                    size_hint: 1, 1
+                    pos_hint: {"x": 0, "y": 0}
+                    multiline: True
+
+                RoundedImage:
+
+                    source: "Images/CopyButton.png"
+                    size_hint: None, None
+                    size: dp(30), dp(30)
+                    pos_hint: {"right": 1, "center_y": 0.1}
+                    on_press: app.copy()
+
+            FloatLayout:
+
+                size_hint_y: 0.45
+
+                TextInput:
+
+                    id: second_input
+                    size_hint: 1, 1
+                    pos_hint: {"x": 0, "y": 0}
+                    multiline: True
+
+                RoundedImage:
+
+                    source: "Images/CopyButton.png"
+                    size_hint: None, None
+                    size: dp(30), dp(30)
+                    pos_hint: {"right": 1, "center_y": 0.1}
+                    on_press: app.copy()
+
+        BoxLayout:
+
+            size_hint_y: 0.2
+            padding: 10
+            spacing: 10
+            pos_hint: {"center_x": 0.5}
+
+            canvas.before:
+                Color:
+                    rgba: 0.2, 0.2, 0.2, 0.3  
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size 
+                    radius: [10]
+
+            RoundedButton:
+
+                text: "English"
+                on_press: 
+                    app.on_button_press(self) 
+                    app.change_language()
+                    root.manager.transition = NoTransition()
+                    app.root.current = "second"
+                    print()
+                    
+            RoundedImage:
+
+                source: "Images/Equilibrium Sign.jpeg"
+                size_hint: (0.25, 0.5)
+                pos_hint: {"center_y": 0.5}
+                color: 1, 1, 1, 1
+                on_press:
+                    app.switch_language()
+                
+            RoundedButton:
+                text: "Osmanya"
+                on_press: 
+                    app.on_button_press(self) 
+                    app.change_language()
+                    root.manager.transition = NoTransition()
+                    app.root.current = "second"
+                    
+
+<SecondWindow>:
+    name: "second" 
+    BoxLayout:
+        Label:
+            text: "Second Screen - Change Language"
+            font_size: 32
+
+MainLayout:
+    MainScreen:
+    SecondWindow:
 
